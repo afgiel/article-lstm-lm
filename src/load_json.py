@@ -1,6 +1,8 @@
 import json
+import re
 
 DATA_PATH = '../data/diffbot_articles.json'
+MIN_LINE_LENGTH = 10
 
 def get_all_text():
     texts = []
@@ -8,5 +10,12 @@ def get_all_text():
         json_obj = json.load(json_file)
         for response in json_obj:
             if response['type'] == 'article':
-                texts.append(response['text'])
+                raw_text = response['text'].lower()
+                processed_text = re.sub('([.,!?()])', r' \1 ', raw_text)
+                processed_text = re.sub('\s{2,}', ' ', processed_text)
+                lines = processed_text.split('\n')
+                for line in lines:
+                    line_split = line.split(' ')
+                    if len(line_split) >= MIN_LINE_LENGTH:
+                        texts.append(line_split)
     return texts
