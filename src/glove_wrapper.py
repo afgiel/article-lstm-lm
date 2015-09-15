@@ -1,7 +1,7 @@
 import numpy as np
 
-PATH_TO_DATA = '/Users/chsu/content/glove.6B.300d.txt'
-NUM_TOKENS = 100000 + 1
+PATH_TO_DATA = '../data/glove.6B.300d.txt'
+NUM_TOKENS = 50000 + 1
 NUM_DIM = 300
 
 
