@@ -1,9 +1,9 @@
 import numpy as np
 
 PATH_TO_DATA = '../data/glove.6B.300d.txt'
-NUM_TOKENS = 50000 + 1
+NUM_SPEC_TOKENS = 3
+NUM_TOKENS = 5000 + NUM_SPEC_TOKENS + 1
 NUM_DIM = 300
-
 
 class GloveWrapper():
 
@@ -27,6 +27,17 @@ class GloveWrapper():
                 assert len(vec) == NUM_DIM
                 self.mapping[word] = index
                 self.L[index] = vec
+                
+        # Add start, end, and unknown tokens
+        index = len(self.L) - 1
+        self.mapping['START'] = index
+        self.L[index] = [0]*NUM_DIM
+        index -= 1
+        self.mapping['END'] = index
+        self.L[index] = [1]*NUM_DIM
+        index -= 1
+        self.mapping['unknown'] = index
+        self.L[index] = [0.5]*NUM_DIM
 
         self.word_mapping = dict(zip(self.mapping.values(), self.mapping.keys()))
 
@@ -34,7 +45,7 @@ class GloveWrapper():
         if word in self.mapping:
             return self.mapping[word]
         else:
-            return None
+            return self.mapping['unknown']
 
     def get_word(self, index):
         if index in self.word_mapping:
