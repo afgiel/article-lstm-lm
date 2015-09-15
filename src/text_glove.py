@@ -9,7 +9,10 @@ def text_to_index(text_list):
     for index,word in enumerate(text_list):
         text_indices[index] = glove_matrix.get_index(word)
     assert len(text_indices) == len(text_list)
-    text_onehots = np.eye(NUM_TOKENS)[text_indices]
+    text_onehots = np.zeros((len(text_list), NUM_TOKENS))
+    for index,text_index in enumerate(text_indices):
+        text_onehots[index, text_index] = 1
+    print text_onehots.shape
     return text_onehots
 
 def text_to_vec(text_list):
