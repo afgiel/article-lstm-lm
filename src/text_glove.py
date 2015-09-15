@@ -3,14 +3,20 @@ import numpy as np
 
 glove_matrix = GloveWrapper()
 
-def text_to_glove(text):
-    """Takes in a string, returns a list of corresponding glove indices"""
-    text_list = text.split()
-    text_indices = []
-    for word in text_list:
-        index = glove_matrix.get_index(word)
-        text_indices = text_indices + [index]
-    print text_indices
+def text_to_index(text_list):
+    """Takes in a list of strings, returns a list of corresponding glove indices"""
+    text_indices = [0]*len(text_list)
+    for index,word in enumerate(text_list):
+        text_indices[index] = glove_matrix.get_index(word)
     assert len(text_indices) == len(text_list)
-    text_vectors = np.eye(NUM_TOKENS)[text_indices]
-    return text_vectors
+    text_onehots = np.eye(NUM_TOKENS)[text_indices]
+    return text_onehots
+
+def text_to_vec(text_list):
+    """Takes in a list of strings, returns a list of glove vectors"""
+    glove_vectors = [0]*len(text_list)
+    for index,word in enumerate(text_list):
+        text_index = glove_matrix.get_index(word)
+        glove_vectors[index] = glove_matrix.get_vec(text_index)
+    assert len(glove_vectors) == len(text_list)
+    return glove_vectors
