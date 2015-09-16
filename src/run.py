@@ -49,11 +49,16 @@ print '%d TRAINING SENTENCES' % num_train
 #Y = np.zeros((num_train, MAX_SEQ_LENGTH, VOCAB_SIZE))
 #for i in range(num_train):
 #    seq = texts[i]
-#    seq_length = len(seq)
-#    for j in range(min(MAX_SEQ_LENGTH, seq_length)):
+#    seq_length = min(MAX_SEQ_LENGTH, len(seq))
+#    for j in range(seq_len):
 #        X[i,j] = vecs[i][j]
-#        Y[i,j] = one_hots[i][j]
+#        # y_t = one hot for index of x_(t-1), except for last
+#        if j < seq_len-1:
+#            Y[i,j] = one_hots[i][j+1]
+#        else:
+#            Y[i,j] = one_hots[i][j]
 
+# LSTM with hidden size of GLOVE_DIM
 print 'BUILDING MODEL'
 model = Sequential()
 model.add(LSTM(GLOVE_DIM, GLOVE_DIM, return_sequences=True))
@@ -67,25 +72,37 @@ print 'TRAINING'
 train_history = {}
 batches_per_epoch = num_train/BATCH_SIZE
 for i in range(N_TOTAL_EPOCHS/N_EPOCHS_PER_SAVE):
-    print '\tEPOCH %d' % (i+1)
+    epoch_loss, epoch_acc = 0.0, 0.0
     for j in range(batches_per_epoch):
-        if j % 25 == 0:
-            print '\t\tBATCH %d of %d' % ((j+1), batches_per_epoch)
+        # sample for batch
         batch_inds = random.sample(range(num_train), BATCH_SIZE)
         batch_texts = [texts[ind] for ind in batch_inds]
         vecs = [text_glove.text_to_vec(text_seq, MAX_SEQ_LENGTH) for text_seq in batch_texts]
         one_hots = [text_glove.text_to_index(text_seq, MAX_SEQ_LENGTH) for text_seq in batch_texts]
         assert len(vecs) == BATCH_SIZE
         assert len(one_hots) == BATCH_SIZE
+        # needs to be numpy tensor
         X = np.zeros((BATCH_SIZE, MAX_SEQ_LENGTH, GLOVE_DIM))
         Y = np.zeros((BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE))
         for k in range(BATCH_SIZE):
             seq = vecs[k]
-            seq_length = len(seq)
-            for l in range(min(MAX_SEQ_LENGTH, seq_length)):
+            seq_len = min(MAX_SEQ_LENGTH, len(seq))
+            for l in range(seq_len):
                 X[k,l] = vecs[k][l]
-                Y[k,l] = one_hots[k][l]
-        model.train_on_batch(X, Y)
+                # y_t = one hot for index of x_(t-1), except for last
+                if l < seq_len-1:
+                    Y[k,l] = one_hots[k][l+1]
+                else:
+                    Y[k,l] = one_hots[k][l]
+        batch_loss, batch_accuracy = model.train_on_batch(X, Y, accuracy=True)
+        epoch_loss += batch_loss
+        batch_accuracy += batch_accuracy
+        if j % 25 == 0:
+            print '\t\tBATCH %d of %d' % (j, batches_per_epoch)
+            print '\t\t\tloss: %f, acc: %f' % (batch_loss, batch_accuracy)
+    print '\tEPOCH %d' % (i+1)
+    print '\tavg loss: %f, avg acc: %f' % (epoch_loss/batches_per_epoch, epoch_acc/batches_per_epoch)
+
 
 
     #try:
@@ -99,6 +116,7 @@ for i in range(N_TOTAL_EPOCHS/N_EPOCHS_PER_SAVE):
     #except KeyboardInterrupt:
     #    print '\n\n===== TRAINING INTERRUPTED ====='
 
+    # save model every N_EPOCHS_PER_SAVE epochs
     model_save_file = '../models/model_epoch_' + str((i+1)*N_EPOCHS_PER_SAVE) + '.hdf5'
     model.save_weights(model_save_file)
     generate_text.generate(model)
