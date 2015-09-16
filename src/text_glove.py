@@ -15,7 +15,6 @@ def text_to_index(text_list, max_len):
     for index in range(seq_len):
         text_index = text_indices[index]
         text_onehots[index, text_index] = 1.
-    print text_onehots.shape
     return text_onehots
 
 def text_to_vec(text_list, max_len):

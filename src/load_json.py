@@ -2,7 +2,7 @@ import json
 import re
 
 DATA_PATH = '../data/diffbot_articles.json'
-MIN_LINE_LENGTH = 10
+MIN_LINE_LENGTH = 20
 
 def get_all_text():
     texts = []
@@ -17,5 +17,6 @@ def get_all_text():
                 for line in lines:
                     line_split = line.split(' ')
                     if len(line_split) >= MIN_LINE_LENGTH:
-                        texts.append(line_split)
+                        this_seq = ['START'] + line_split + ['END']
+                        texts.append(this_seq)
     return texts
